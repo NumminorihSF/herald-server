@@ -1,6 +1,6 @@
 {
   "name": "herald-server",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": " Server for sending messages by publish-subscribe, and whisper.",
   "main": "index.js",
   "scripts": {
@@ -13,7 +13,8 @@
   "keywords": [
     "publish",
     "subscribe",
-    "socket"
+    "socket",
+    "herald"
   ],
   "author": "Konstantine Petryaev <numminorihsf@gmail.com>",
   "license": "MIT",
