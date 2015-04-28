@@ -21,23 +21,3 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
-if (module.parent) {
-    module.exports = require(__dirname+'/lib/class.js');
-}
-else {
-    var hs = new (require('./lib/class.js'))({}, 'no');
-    hs.on('error', function(){
-        console.log('HS error:', error);
-    });
-    hs.on('listening', function(){
-        console.log('HS listening on', hs.address());
-    });
-    hs.listen(8765);
-    process.on('SIGINT', function(){
-        hs.close();
-    });
-    process.on('SIGTERM', function(){
-        hs.close();
-    });
-}
