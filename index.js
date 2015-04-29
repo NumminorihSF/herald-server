@@ -27,7 +27,7 @@ if (module.parent) {
 }
 else {
     var hs = new (require('./lib/class.js'))({}, 'no');
-    hs.on('error', function(){
+    hs.on('error', function(error){
         console.log('HS error:', error);
     });
     hs.on('listening', function(){
