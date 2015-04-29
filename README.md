@@ -49,7 +49,7 @@ Simple example:
 * `.messageMaker` - Object. Some module, that make and parse messages. See below. Default `crypt-maker`
 * `.authorizeFunction` - function. Some function tests, that new connect can stay connected. See below.
 
-If use `crypt-maker` and if `algorithm !== 'no'` and no key passed to constructor - throws error.
+If use `crypt-maker` and if `algorithm && algorithm !== 'no'` and no key passed to constructor - throws error.
 
 
 ## hs.listen() 
