@@ -26,6 +26,7 @@ if (module.parent) {
     module.exports = require(__dirname+'/lib/class.js');
 }
 else {
+    console.log('SPID: ',process.pid);
     var hs = new (require('./lib/class.js'))({}, 'no');
     hs.on('error', function(error){
         console.log('HS error:', error);
@@ -34,10 +35,23 @@ else {
         console.log('HS listening on', hs.address());
     });
     hs.listen(8765);
+    var time = new Date().getTime();
+    var count = hs.counter;
+    setInterval(function(){
+        var c = (hs.counter - count)/(new Date() - time)*1000;
+        hs.publish({header: {event: 'counts'}, body: {time: time, count: c}});
+        if (c) console.log(c);
+        count = hs.counter;
+        time = new Date().getTime();
+    }, 1000);
     process.on('SIGINT', function(){
-        hs.close();
+        hs.close(function(){
+            process.exit();
+        });
     });
     process.on('SIGTERM', function(){
-        hs.close();
+        hs.close(function(){
+            process.exit();
+        });
     });
 }
