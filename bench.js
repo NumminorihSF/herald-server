@@ -589,11 +589,11 @@ setTimeout(function(){
 
 
 
-    console.log('Start test for 1000k messages.');
+    console.log('Start test for 1.000.000 messages. (10.000 of 4K messages)');
 
     testUnsubscribed(10000, function(err, count){
         testSubscribed(count, function(err, count){
-            count /= 10;
+            count /= 100;
             testUnsubscribed4K(count, function(err, count){
                 testSubscribed4K(count, function(err, data){
                     console.log('\nEnd test.');
