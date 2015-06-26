@@ -2,6 +2,7 @@ herald-server
 ===========================
 
 **v1 is not backward compatible with v0** 
+
 Use node.js socket server (udp, tcp, unix) for transport messages (or encrypted messages) through applications.
 
 Install with:
@@ -78,7 +79,7 @@ Options are:
   * `exclusive` {Boolean} - Optional.
 * `callback` {Function} - Optional.
 
-For all info about this see: https://nodejs.org/api/net.html#net_server_listen_port_host_backlog_callback
+For all info about this see: [https://nodejs.org/api/net.html#net_server_listen_port_host_backlog_callback](https://nodejs.org/api/net.html#net_server_listen_port_host_backlog_callback)
 
 ## hs.close([callback])
 
