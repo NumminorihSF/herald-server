@@ -1,6 +1,6 @@
 {
   "name": "herald-server",
-  "version": "0.1.9",
+  "version": "1.0.1",
   "description": " Server for sending messages by publish-subscribe, and whisper.",
   "main": "index.js",
   "scripts": {
@@ -14,7 +14,10 @@
     "publish",
     "subscribe",
     "socket",
-    "herald"
+    "herald",
+    "rpc",
+    "server",
+    "messaging"
   ],
   "author": "Konstantine Petryaev <numminorihsf@gmail.com>",
   "license": "MIT",
@@ -23,6 +26,6 @@
   },
   "homepage": "https://github.com/NumminorihSF/herald-server#readme",
   "dependencies": {
-    "crypt-maker": "^0.1.4"
+    "crypt-maker": "^0.2.2"
   }
 }

@@ -39,7 +39,6 @@ else {
     var count = hs.counter;
     setInterval(function(){
         var c = (hs.counter - count)/(new Date() - time)*1000;
-        hs.publish({header: {event: 'counts'}, body: {time: time, count: c}});
         if (c) console.log(c);
         count = hs.counter;
         time = new Date().getTime();
