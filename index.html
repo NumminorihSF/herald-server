@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Herald-server : Server for sending messages by publish-subscribe, and whispering.">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Herald-server</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/NumminorihSF/herald-server">View on GitHub</a>
+
+          <h1 id="project_title">Herald-server</h1>
+          <h2 id="project_tagline">Server for sending messages by publish-subscribe, and whispering.</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/NumminorihSF/herald-server/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/NumminorihSF/herald-server/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <p>Use node.js or io.js socket server (tcp, unix) for transport messages (or encrypted messages) through applications.</p>
+
+<p>Install with:</p>
+
+<pre><code>npm install herald-server
+</code></pre>
+
+<p>Dependencies:</p>
+
+<pre><code>crypt-maker
+</code></pre>
+
+<p><a href="http://numminorihsf.github.io/herald">Documentation by jsDuck. Also in RUS</a>. </p>
+
+<h1>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h1>
+
+<p>Simple example:</p>
+
+<div class="highlight highlight-js"><pre>
+    <span class="pl-k">var</span> HeraldServer <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>herald-server<span class="pl-pds">'</span></span>);
+    <span class="pl-k">var</span> hs <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">HeraldServer</span>({}, <span class="pl-s"><span class="pl-pds">'</span>no<span class="pl-pds">'</span></span>);
+    hs.on(<span class="pl-s"><span class="pl-pds">'</span>error<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(){
+        <span class="pl-en">console</span><span class="pl-c1">.log</span>(<span class="pl-s"><span class="pl-pds">'</span>HS error:<span class="pl-pds">'</span></span>, error);
+    });
+    hs.on(<span class="pl-s"><span class="pl-pds">'</span>listening<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(){
+        <span class="pl-en">console</span><span class="pl-c1">.log</span>(<span class="pl-s"><span class="pl-pds">'</span>HS listening on<span class="pl-pds">'</span></span>, hs.address());
+    });
+    hs.listen(<span class="pl-c1">8765</span>);
+    <span class="pl-c1">process</span>.on(<span class="pl-s"><span class="pl-pds">'</span>SIGINT<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(){
+        hs.<span class="pl-c1">close</span>();
+    });
+    <span class="pl-c1">process</span>.on(<span class="pl-s"><span class="pl-pds">'</span>SIGTERM<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(){
+        hs.<span class="pl-c1">close</span>();
+    });</pre></div>
+
+<h1>
+<a id="changes" class="anchor" href="#changes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Changes</h1>
+
+<ul>
+<li>Add rpc support.</li>
+<li>Ping removed (tcp ans unix socket know about connection close). Udp is not recommended.</li>
+<li>Some procedures can be spawned on server easily.</li>
+<li>Add JSDuck doc.</li>
+</ul>
+
+<h1>
+<a id="methods" class="anchor" href="#methods" aria-hidden="true"><span class="octicon octicon-link"></span></a>Methods</h1>
+
+<h2>
+<a id="new-heraldseveroptions-algorithm-key" class="anchor" href="#new-heraldseveroptions-algorithm-key" aria-hidden="true"><span class="octicon octicon-link"></span></a>new HeraldSever(options[, algorithm[, key]])</h2>
+
+<p><code>options</code> is an Object. May be <code>{}</code>. Contains properties:</p>
+
+<ul>
+<li>
+<code>.logger</code> - Logger object - to log inner events</li>
+<li>
+<code>.whiteList</code> - Array of strings or regexps. Default <code>[]</code>
+</li>
+<li>
+<code>.welcomeMessage</code> - String. Then connection opens - send this to socket. Default <code>'Welcome to Herald Server.'</code>
+</li>
+<li>
+<code>.messageMaker</code> - Object. Some module, that make and parse messages. See below. Default <code>crypt-maker</code>
+</li>
+</ul>
+
+<p><code>algorithm</code> - If need crypt messages - algorithm for crypt. By default doesn't encrypt.
+<code>key</code> Encryption key.</p>
+
+<p>If use <code>crypt-maker</code> and if <code>algorithm &amp;&amp; algorithm !== 'no'</code> and no key passed to constructor - throws error.</p>
+
+<h2>
+<a id="hslisten" class="anchor" href="#hslisten" aria-hidden="true"><span class="octicon octicon-link"></span></a>hs.listen()</h2>
+
+<p>Arguments passed to method are seems as net.Server.listen method of node.js standard api. Use like:</p>
+
+<ul>
+<li><code>hs.listen(port[, host][, backlog][, callback])</code></li>
+<li><code>hs.listen(path[, callback])</code></li>
+<li><code>hs.listen(handle[, callback])</code></li>
+<li><code>hs.listen(options[, callback])</code></li>
+</ul>
+
+<p>Options are:</p>
+
+<ul>
+<li>
+<code>options</code> {Object} - Required. Supports the following properties:
+
+<ul>
+<li>
+<code>port</code> {Number} - Optional.</li>
+<li>
+<code>host</code> {String} - Optional.</li>
+<li>
+<code>backlog</code> {Number} - Optional.</li>
+<li>
+<code>path</code> {String} - Optional.</li>
+<li>
+<code>exclusive</code> {Boolean} - Optional.</li>
+</ul>
+</li>
+<li>
+<code>callback</code> {Function} - Optional.</li>
+</ul>
+
+<p>For all info about this see: <a href="https://nodejs.org/api/net.html#net_server_listen_port_host_backlog_callback">https://nodejs.org/api/net.html#net_server_listen_port_host_backlog_callback</a></p>
+
+<h2>
+<a id="hsclosecallback" class="anchor" href="#hsclosecallback" aria-hidden="true"><span class="octicon octicon-link"></span></a>hs.close([callback])</h2>
+
+<p>Stops the server from accepting new connections and keeps existing
+connections.</p>
+
+<h2>
+<a id="hsunref-experimental" class="anchor" href="#hsunref-experimental" aria-hidden="true"><span class="octicon octicon-link"></span></a>hs.unref() Experimental</h2>
+
+<p>Calling <code>unref</code> on a server will allow the program to exit if this is the only
+active server in the event system. If the server is already <code>unref</code>d calling
+<code>unref</code> again will have no effect.</p>
+
+<h2>
+<a id="hsref-experimental" class="anchor" href="#hsref-experimental" aria-hidden="true"><span class="octicon octicon-link"></span></a>hs.ref() Experimental</h2>
+
+<p>Opposite of <code>unref</code>, calling <code>ref</code> on a previously <code>unref</code>d server will <em>not</em>
+let the program exit if it's the only server left (the default behavior). If
+the server is <code>ref</code>d calling <code>ref</code> again will have no effect.</p>
+
+<h1>
+<a id="events" class="anchor" href="#events" aria-hidden="true"><span class="octicon octicon-link"></span></a>Events</h1>
+
+<h2>
+<a id="listening" class="anchor" href="#listening" aria-hidden="true"><span class="octicon octicon-link"></span></a>'listening'</h2>
+
+<p>Emitted when the server has been bound after calling <code>hs.listen</code>.</p>
+
+<h2>
+<a id="connection" class="anchor" href="#connection" aria-hidden="true"><span class="octicon octicon-link"></span></a>'connection'</h2>
+
+<ul>
+<li>{Socket Object} The connection object</li>
+</ul>
+
+<p>Emitted when a new connection is made. <code>socket</code> is an instance of
+<code>net.Socket</code>. Also where if <code>socket.header</code> with header of auth message.</p>
+
+<h2>
+<a id="close" class="anchor" href="#close" aria-hidden="true"><span class="octicon octicon-link"></span></a>'close'</h2>
+
+<p>Emitted when the server closes. Note that if connections exist, this
+event is not emitted until all connections are ended.</p>
+
+<h2>
+<a id="error" class="anchor" href="#error" aria-hidden="true"><span class="octicon octicon-link"></span></a>'error'</h2>
+
+<ul>
+<li>{Error Object}</li>
+</ul>
+
+<p>Emitted when an error occurs.  The <code>'close'</code> event will be called directly
+following this event.  See example in discussion of <code>hs.listen</code>.</p>
+
+<h1>
+<a id="message-format" class="anchor" href="#message-format" aria-hidden="true"><span class="octicon octicon-link"></span></a>Message format</h1>
+
+<p>Every message should has <code>header</code> and <code>body</code>.
+If there is no <code>header</code> or <code>body</code> - message will not sent.</p>
+
+<h2>
+<a id="authorize" class="anchor" href="#authorize" aria-hidden="true"><span class="octicon octicon-link"></span></a>Authorize</h2>
+
+<p><strong>Be careful</strong> by default without any encrypt algorithm any can connect to your server if he know format.</p>
+
+<p>Example of message to authorize (without encrypt):</p>
+
+<pre><code>    '{"rpc":"herald-server","action":"authorize","actionId":7,"name":"156512",
+    "uid":"156512_86835","messId":76688,"retry":5,"timeout":15000}\r\n
+     {"args":{"wellKnown":"pHrAsE","name":"156512","uid":"156512_86835","rand":459}}\r\n\r\n' 
+</code></pre>
+
+<p>If there is some connection with same uid - will not authorize new connection and close it.</p>
+
+<h2>
+<a id="message-header-format" class="anchor" href="#message-header-format" aria-hidden="true"><span class="octicon octicon-link"></span></a>Message header format</h2>
+
+<p>Fields:</p>
+
+<ul>
+<li>
+<code>messId</code> Number - id of message.</li>
+<li>
+<code>name</code> String - connection name. Used for whispering and rpc.</li>
+<li>
+<code>uid</code> String - connection uid. Used for whispering and rpc. Unique for every connect.</li>
+<li>
+<code>retry</code> Number [optional] - Count of retries of sending this message. If no field - will not retry.
+<em>Now it is ignored by server. Will work soon.</em>
+</li>
+<li>
+<code>timeout</code> Number [optional] - Duration in ms to wait answer from client. If no field - will not retry.
+<em>Now it is ignored by server. Will work soon.</em>
+</li>
+</ul>
+
+<p>Event:</p>
+
+<ul>
+<li>
+<code>whisp</code> String [optional] - name of connection to send event message.</li>
+<li>
+<code>whispUid</code> String [optional] - uid of connection to send event message.</li>
+<li>
+<code>event</code> String - event name. If no <code>whisp</code> or <code>whispUid</code> sends to all subscribers.</li>
+</ul>
+
+<p>RPC:</p>
+
+<ul>
+<li>
+<code>actionId</code> Number - id of action.</li>
+<li>
+<code>action</code> String - name of action.</li>
+<li>
+<code>rpc</code> String [optional] - name of connection to send rpc message.</li>
+<li>
+<code>rpcUid</code> String [optional] - uid of connection to send rpc message.</li>
+<li>
+<code>rpcRegExp</code> String|RegExp [optional] - regexp to find connections by name to send rpc message.</li>
+</ul>
+
+<h2>
+<a id="message-body-format" class="anchor" href="#message-body-format" aria-hidden="true"><span class="octicon octicon-link"></span></a>Message body format</h2>
+
+<p>Body can by plain string, json, number or something else, except functions.</p>
+
+<h2>
+<a id="message-examples" class="anchor" href="#message-examples" aria-hidden="true"><span class="octicon octicon-link"></span></a>Message examples</h2>
+
+<p>Examples shown without any encryption.</p>
+
+<p>RPC by client name message:</p>
+
+<div class="highlight highlight-js"><pre>     <span class="pl-s"><span class="pl-pds">'</span>{"rpc":"applicationToCall","action":"actionToCall","actionId":numberActionIdFromSender,</span>
+<span class="pl-s">     "name":"nameOfSender","uid":"uidOfSender","messId":numberMessageId}<span class="pl-cce">\r\n</span></span>
+<span class="pl-s">         {"args":{argsObject}}<span class="pl-cce">\r\n\r\n</span><span class="pl-pds">'</span></span> </pre></div>
+
+<p>RPC by client UID message:</p>
+
+<div class="highlight highlight-js"><pre>     <span class="pl-s"><span class="pl-pds">'</span>{"rpcUid":"applicationToCall","action":"actionToCall","actionId":numberActionIdFromSender,</span>
+<span class="pl-s">     "name":"nameOfSender","uid":"uidOfSender","messId":numberMessageId}<span class="pl-cce">\r\n</span></span>
+<span class="pl-s">         {"args":{argsObject}}<span class="pl-cce">\r\n\r\n</span><span class="pl-pds">'</span></span> </pre></div>
+
+<p>Whispering message:</p>
+
+<div class="highlight highlight-js"><pre>    <span class="pl-s"><span class="pl-pds">'</span>{"whisp":"nameOfAppToWhisp","event":"someSecretEvent","name":"nameOfSender","uid":"uidOfSender",</span>
+<span class="pl-s">    "messId":numberMessageId}<span class="pl-cce">\r\n</span>"eventBody"<span class="pl-cce">\r\n\r\n</span><span class="pl-pds">'</span></span></pre></div>
+
+<p>Event message:</p>
+
+<div class="highlight highlight-js"><pre>    <span class="pl-s"><span class="pl-pds">'</span>{"event":"someEvent","name":"nameOfSender","uid":"uidOfSender","messId":numberMessageId}<span class="pl-cce">\r\n</span>"eventBody"<span class="pl-cce">\r\n\r\n</span><span class="pl-pds">'</span></span></pre></div>
+
+<h1>
+<a id="license---mit-license" class="anchor" href="#license---mit-license" aria-hidden="true"><span class="octicon octicon-link"></span></a>LICENSE - "MIT License"</h1>
+
+<p>Copyright (c) 2015 Konstantine Petryaev</p>
+
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Herald-server maintained by <a href="https://github.com/NumminorihSF">NumminorihSF</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
