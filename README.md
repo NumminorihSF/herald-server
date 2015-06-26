@@ -1,6 +1,7 @@
 herald-server
 ===========================
 
+**v1 is not backward compatible with v0** 
 Use node.js socket server (udp, tcp, unix) for transport messages (or encrypted messages) through applications.
 
 Install with:
@@ -11,6 +12,7 @@ Dependencies:
 
     crypt-maker
 
+[Documentation by jsDuck. Also in RUS](http://numminorihsf.github.io/herald). 
 
 # Usage
 
@@ -35,6 +37,12 @@ Simple example:
     });
 ```
 
+# Changes
+
+ - Add rpc support.
+ - Ping removed (tcp ans unix socket know about connection close). Udp is not recommended.
+ - Some procedures can be spawned on server easily.
+ - Add JSDuck doc.
 
 # Methods
 
@@ -43,11 +51,11 @@ Simple example:
 `options` is an Object. May be `{}`. Contains properties:
 * `.logger` - Logger object - to log inner events
 * `.whiteList` - Array of strings or regexps. Default `[]`
-* `.pingInterval` - Numeric (ms). How often will tests connections. If < 5000 set to 5000. Default `30000`
-* `.pingMaxFails` - Numeric. If ping of some connection fails more than `.pingMaxFails` times - close connection. Default: `5`
 * `.welcomeMessage` - String. Then connection opens - send this to socket. Default `'Welcome to Herald Server.'`
 * `.messageMaker` - Object. Some module, that make and parse messages. See below. Default `crypt-maker`
-* `.authorizeFunction` - function. Some function tests, that new connect can stay connected. See below.
+
+`algorithm` - If need crypt messages - algorithm for crypt. By default doesn't encrypt.
+`key` Encryption key.
 
 If use `crypt-maker` and if `algorithm && algorithm !== 'no'` and no key passed to constructor - throws error.
 
@@ -77,13 +85,13 @@ For all info about this see: https://nodejs.org/api/net.html#net_server_listen_p
 Stops the server from accepting new connections and keeps existing
 connections.
 
-## hs.unref()
+## hs.unref() Experimental
 
 Calling `unref` on a server will allow the program to exit if this is the only
 active server in the event system. If the server is already `unref`d calling
 `unref` again will have no effect.
 
-## hs.ref()
+## hs.ref() Experimental
 
 Opposite of `unref`, calling `ref` on a previously `unref`d server will *not*
 let the program exit if it's the only server left (the default behavior). If
@@ -97,10 +105,10 @@ Emitted when the server has been bound after calling `hs.listen`.
 
 ## 'connection'
 
-* {Socket object} The connection object
+* {Socket Object} The connection object
 
 Emitted when a new connection is made. `socket` is an instance of
-`net.Socket`.
+`net.Socket`. Also where if `socket.header` with header of auth message.
 
 ## 'close'
 
@@ -119,41 +127,47 @@ following this event.  See example in discussion of `hs.listen`.
 
 Every message should has `header` and `body`.
 If there is no `header` or `body` - message will not sent.
-After the connect, client should send authorize request to server.
-Server passed this data to `authorizeFunction`.
 
-## Default authorize request format
 
-Header should has an field `event == 'authorize'`.
-Also there should be field `iAm` with name of application.
-Body also should has encrypted field `iAm` with same value. 
+## Authorize
+
 **Be careful** by default without any encrypt algorithm any can connect to your server if he know format.
 
 Example of message to authorize (without encrypt):
 
 ```
-    '{"event":"authorize","iAm":"Dev"}\r\n{"iAm":"Dev"}\r\n\r\n' 
+    '{"rpc":"herald-server","action":"authorize","actionId":7,"name":"156512",
+    "uid":"156512_86835","messId":76688,"retry":5,"timeout":15000}\r\n
+     {"args":{"wellKnown":"pHrAsE","name":"156512","uid":"156512_86835","rand":459}}\r\n\r\n' 
 ```
 
-If there is some connection with same name - will not authorize new connection and close it.
-If header.iAm !== body.iAm - close connect.
+If there is some connection with same uid - will not authorize new connection and close it.
+
 
 
 ## Message header format
 
 Fields:
-* `whisp` String - name of connection, where will try to whisper some message 
-(event field will be ignore and passed to connection)
-* `event` String - an event name, that will be publish. Except `'ping'`, `'pong'`, `'subscribe'`, `'unsubscribe'`
-* `time` Numeric [optional] - timestamp of ping event create date.
-* `iAm` String [optional] - connection name. Used for whispering. Unique for every connect.
+* `messId` Number - id of message.
+* `name` String - connection name. Used for whispering and rpc.
+* `uid` String - connection uid. Used for whispering and rpc. Unique for every connect.
+* `retry` Number [optional] - Count of retries of sending this message. If no field - will not retry.
+*Now it is ignored by server. Will work soon.*
+* `timeout` Number [optional] - Duration in ms to wait answer from client. If no field - will not retry.
+*Now it is ignored by server. Will work soon.*
 
-### Special header events
+Event:
+* `whisp` String [optional] - name of connection to send event message.
+* `whispUid` String [optional] - uid of connection to send event message.
+* `event` String - event name. If no `whisp` or `whispUid` sends to all subscribers.
 
-`ping` - create only by HS. Every client should answer "pong" message with body of accepted message.
-`pong` - answer for "ping" message.
-`subscribe` - connection will subscribe to some events. name of event should be passed at body of message.
-`unsubscribe` - connection will unsubscribe from some events. name of event should be passed at body of message.
+RPC:
+* `actionId` Number - id of action.
+* `action` String - name of action.
+* `rpc` String [optional] - name of connection to send rpc message.
+* `rpcUid` String [optional] - uid of connection to send rpc message.
+* `rpcRegExp` String|RegExp [optional] - regexp to find connections by name to send rpc message.
+
 
 ## Message body format
 
@@ -161,116 +175,32 @@ Body can by plain string, json, number or something else, except functions.
 
 ## Message examples
 
-Examples shown without any 
+Examples shown without any encryption.
 
-Authorize message:
+RPC by client name message:
 ```js
-    '{"event":"authorize","iAm":"Dev"}\r\n{"iAm":"Dev"}\r\n\r\n'
-    //  {"event":"authorize","iAm":"Dev"}
-    //  {"iAm":"Dev"}
+     '{"rpc":"applicationToCall","action":"actionToCall","actionId":numberActionIdFromSender,
+     "name":"nameOfSender","uid":"uidOfSender","messId":numberMessageId}\r\n
+         {"args":{argsObject}}\r\n\r\n' 
 ```
 
-Ping message:
+RPC by client UID message:
 ```js
-    '{"event":"ping","time":1430200822338}\r\n{}\r\n\r\n'
-    //  {"event":"ping", "time":1430200822338}
-    //  {}
-```
-
-Pong message:
-```js
-    '{"event":"pong","time":1430200822338}\r\n{}\r\n\r\n'
-    //  {"event":"pong", "time":1430200822338}
-    //  {}
-```
-
-Subscribe message:
-```js
-    '{"event":"subscribe"}\r\n"eventName"\r\n\r\n'
-    //  {"event":"subscribe"}
-    //  "eventName"
-```
-
-Unsubscribe message:
-```js
-    '{"event":"unsubscribe"}\r\n"eventName"\r\n\r\n'
-    //  {"event":"unsubscribe"}
-    //  "eventName"
+     '{"rpcUid":"applicationToCall","action":"actionToCall","actionId":numberActionIdFromSender,
+     "name":"nameOfSender","uid":"uidOfSender","messId":numberMessageId}\r\n
+         {"args":{argsObject}}\r\n\r\n' 
 ```
 
 Whispering message:
 ```js
-    '{"whisp":"nameOfAppToWhisp","event":"someSecretEvent"}\r\n"eventBody"\r\n\r\n'
-    //  {"whisp":"nameOfAppToWhisp","event":"someSecretEvent"}
-    //  "eventBody"
+    '{"whisp":"nameOfAppToWhisp","event":"someSecretEvent","name":"nameOfSender","uid":"uidOfSender",
+    "messId":numberMessageId}\r\n"eventBody"\r\n\r\n'
 ```
 
-# authorize function
-
-You may make authorize function. Parameters to this functions are:
-* `authData` Object
-* `authData.message` - message, that socket write to server
-* `authData.connect` - new.Socket object of this connect
-* `callback` Function - If success - second param should be Object with field `'name'`. 
-By this name whispering will works.
-
-Example: 
-
+Event message:
 ```js
-    authorizeFunction = function(authData, callback){
-        var message = parseMessage(authData.message);
-        if (!message) return callback(Error('no message'));
-        if (message.header && message.header.event == 'authorize') {
-            if (message.header.iAm) {
-                for (var i=0; i < whiteList.length; i++){
-                    if (message.header.iAm.match(this.whiteList[i])) {
-                        if (message.header.iAm === message.body.iAm) return callback(null, {name: message.header.iAm});
-                        else return callback(null, false);
-                    }
-                }
-            return callback(null, false);                   
-            if (message.body && message.body.iAm) {
-                if (message.header.iAm === message.body.iAm) return callback(null, {name: message.header.iAm});
-            }
-        }
-        return callback(null, false);
-    };
+    '{"event":"someEvent","name":"nameOfSender","uid":"uidOfSender","messId":numberMessageId}\r\n"eventBody"\r\n\r\n'
 ```
-
-
-# messageMaker
-
-Message maker can be passed to server. It should has this methods:
-
-## .makeMessage(message)
-
-`message` is an Object. It should contains:
-+ `message.header` - Object. Header of messages
-    * `message.header.event` - String. Event, or doing
-    * `message.header.iAm` - String. Optional
-+ `message.body` - Object. May be `{}`
-
-Returns string formed to write into socket.
-
-## .parseMessage(message)
-
-`message` - encrypted formed string.
-Returns {header: headerObject, body: bodyObject}
-
-
-## .splitMessages(rawString)
-
-`rawString` some string, that socket connection sends. 
-If doesn't ends by some message separator - should return `null` or `[]`
-If ends by message separator - return array of messages (not parsed and not decrypted)
-
-## .getHeader(message)
-
-Returns header object from raw message.
-
-## .getBody(message)
-
-Returns body object from raw message.
 
 # LICENSE - "MIT License"
 
