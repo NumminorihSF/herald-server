@@ -1,6 +1,6 @@
 {
   "name": "herald-server",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": " Server for sending messages by publish-subscribe, and whisper.",
   "main": "index.js",
   "scripts": {
@@ -26,6 +26,6 @@
   },
   "homepage": "https://github.com/NumminorihSF/herald-server#readme",
   "dependencies": {
-    "crypt-maker": "^0.2.2"
+    "crypt-maker": "^0.2.3"
   }
 }
